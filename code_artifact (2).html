@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타이타닉 생존 시뮬레이터</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6', // Teal
+                            800: '#1e3a8a', // Deep Blue
+                            900: '#0f172a', // Slate 900
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Custom UI element transitions */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Radio button customizations */
+        .class-radio:checked + label {
+            background-color: #1e3a8a;
+            color: white;
+            border-color: #1e3a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
+        }
+        
+        .class-label {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .parch-radio:checked + label {
+            background-color: #1e3a8a;
+            color: white;
+            border-color: #1e3a8a;
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
+        }
+
+        .parch-label {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Progress Bar Animation */
+        .progress-bar-fill {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 1s ease;
+        }
+
+        /* Number counting animation helper */
+        .number-counter {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans antialiased">
+
+    <main class="glass-card w-full max-w-4xl rounded-3xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Left Side: Inputs -->
+        <div class="w-full md:w-3/5 p-8 md:p-12 border-b md:border-b-0 md:border-r border-slate-200">
+            <header class="mb-10">
+                <div class="inline-block px-3 py-1 bg-brand-100 text-brand-800 text-sm font-bold rounded-full mb-3 uppercase tracking-wider">Historical Simulator</div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-brand-900 leading-tight mb-2">타이타닉<br>생존 시뮬레이터</h1>
+                <p class="text-slate-500 text-lg">1912년 실제 탑승객 데이터를 기반으로<br>나의 생존 확률을 예측해 보세요.</p>
+            </header>
+
+            <section class="mb-10">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-slate-800">
+                    <i class="fa-solid fa-ship text-brand-800 mr-2"></i> 객실 등급 (Pclass)
+                </h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <input type="radio" id="pclass-1" name="pclass" value="1" class="class-radio hidden" checked>
+                        <label for="pclass-1" class="class-label flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50">
+                            <span class="text-xl font-bold mb-1">1등석</span>
+                            <span class="text-xs opacity-80">최고급 객실</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" id="pclass-2" name="pclass" value="2" class="class-radio hidden">
+                        <label for="pclass-2" class="class-label flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50">
+                            <span class="text-xl font-bold mb-1">2등석</span>
+                            <span class="text-xs opacity-80">중산층 객실</span>
+                        </label>
+                    </div>
+                    <div>
+                        <input type="radio" id="pclass-3" name="pclass" value="3" class="class-radio hidden">
+                        <label for="pclass-3" class="class-label flex flex-col items-center justify-center p-4 border-2 border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50">
+                            <span class="text-xl font-bold mb-1">3등석</span>
+                            <span class="text-xs opacity-80">일반 노동자</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold mb-4 flex items-center text-slate-800">
+                    <i class="fa-solid fa-people-roof text-brand-800 mr-2"></i> 동반 부모/자녀 수 (Parch)
+                </h2>
+                <div class="flex flex-wrap gap-3 justify-between">
+                    <!-- Generation of radio buttons for 0 to 6 -->
+                    <script>
+                        for(let i=0; i<=6; i++) {
+                            const checked = i === 0 ? 'checked' : '';
+                            document.write(`
+                                <div class="relative">
+                                    <input type="radio" id="parch-${i}" name="parch" value="${i}" class="parch-radio hidden" ${checked}>
+                                    <label for="parch-${i}" class="parch-label w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-200 text-lg font-bold cursor-pointer hover:bg-slate-50">
+                                        ${i}
+                                    </label>
+                                </div>
+                            `);
+                        }
+                    </script>
+                </div>
+                <p class="text-sm text-slate-500 mt-3"><i class="fa-solid fa-circle-info mr-1"></i> 배우자나 형제자매는 포함하지 않은 숫자입니다.</p>
+            </section>
+        </div>
+
+        <!-- Right Side: Results Display -->
+        <div class="w-full md:w-2/5 bg-slate-50 p-8 md:p-12 flex flex-col justify-center relative overflow-hidden">
+            <!-- Background decorative element -->
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-brand-800 opacity-5 rounded-full blur-3xl"></div>
+            
+            <h3 class="text-lg font-bold text-slate-500 mb-2 uppercase tracking-wide">예측 결과</h3>
+            
+            <div class="flex items-baseline mb-4">
+                <span id="survival-rate-number" class="number-counter font-montserrat text-7xl font-black text-brand-900 tracking-tighter">0</span>
+                <span class="text-4xl font-bold text-brand-900 ml-1">%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full h-6 bg-slate-200 rounded-full overflow-hidden mb-6 shadow-inner">
+                <div id="survival-progress" class="progress-bar-fill h-full bg-brand-800 w-0 relative">
+                    <div class="absolute inset-0 bg-white opacity-20" style="background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Status Badge -->
+            <div class="mb-4">
+                <span id="status-badge" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-800 transition-colors duration-300">
+                    <i id="status-icon" class="fa-solid fa-check-circle mr-2"></i>
+                    <span id="status-text">계산 중...</span>
+                </span>
+            </div>
+
+            <!-- Dynamic Insight Text -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative z-10 min-h-[120px]">
+                <p id="insight-text" class="text-slate-600 leading-relaxed text-[15px]">
+                    데이터를 분석하고 있습니다. 조건을 변경하여 생존 확률이 어떻게 변하는지 확인해 보세요.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Data Matrix based on the slide analysis
+        // survivalRates[Pclass][Parch] = survival rate in percentage
+        const survivalRates = {
+            1: { 0: 61, 1: 67, 2: 74, 3: 60, 4: 50, 5: 40, 6: 30 }, // Estimated decline for large families in 1st class
+            2: { 0: 36, 1: 70, 2: 81, 3: 15, 4: 10, 5: 5,  6: 0 },  // Steep drop after 2
+            3: { 0: 21, 1: 35, 2: 33, 3: 8,  4: 5,  5: 2,  6: 0 }   // Big families in 3rd class had very low survival
+        };
+
+        // DOM Elements
+        const pclassInputs = document.querySelectorAll('input[name="pclass"]');
+        const parchInputs = document.querySelectorAll('input[name="parch"]');
+        const rateNumberEl = document.getElementById('survival-rate-number');
+        const progressBarEl = document.getElementById('survival-progress');
+        const badgeEl = document.getElementById('status-badge');
+        const statusTextEl = document.getElementById('status-text');
+        const statusIconEl = document.getElementById('status-icon');
+        const insightTextEl = document.getElementById('insight-text');
+
+        // Animation state
+        let currentDisplayedRate = 0;
+        let animationFrame;
+
+        // Function to animate numbers
+        function animateNumber(target) {
+            cancelAnimationFrame(animationFrame);
+            const duration = 1000;
+            const start = performance.now();
+            const startValue = currentDisplayedRate;
+
+            function update(currentTime) {
+                const elapsed = currentTime - start;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Ease out expo
+                const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                
+                currentDisplayedRate = startValue + (target - startValue) * easeProgress;
+                rateNumberEl.textContent = Math.round(currentDisplayedRate);
+
+                if (progress < 1) {
+                    animationFrame = requestAnimationFrame(update);
+                } else {
+                    currentDisplayedRate = target;
+                    rateNumberEl.textContent = target;
+                }
+            }
+            animationFrame = requestAnimationFrame(update);
+        }
+
+        function getInsight(pclass, parch, rate) {
+            if (pclass === 1) {
+                if (parch === 0) return "1등석의 나홀로 승객은 기본적으로 높은 생존율을 보장받았습니다. 구명보트 우선 탑승권이 주어졌습니다.";
+                if (parch === 1 || parch === 2) return "1등석 승객이면서 1~2명의 가족이 있는 경우 생존 확률이 가장 높습니다. 가족의 상호 조력이 빛을 발한 최적의 조건입니다.";
+                return "1등석이라도 3명 이상의 가족을 동반할 경우 챙겨야 할 인원이 많아져 탈출 속도가 다소 지연될 수 있습니다.";
+            } 
+            else if (pclass === 2) {
+                if (parch === 0) return "2등석의 나홀로 승객 생존율은 의외로 저조합니다. 아동 구제가 우선시 되면서 성인 1인 승객은 순위에서 밀려났습니다.";
+                if (parch === 1 || parch === 2) return "2등석 승객 중 아이를 동반한 가족 단위의 생존율이 비약적으로 상승합니다. '여성과 아이들 먼저' 정책의 최대 수혜자입니다.";
+                return "2등석의 대가족은 기록상 드물지만, 긴급 상황에서 가족 전원이 함께 구명보트에 오르기 매우 어려웠습니다.";
+            } 
+            else if (pclass === 3) {
+                if (parch === 0) return "3등석 승객 중 나홀로 탑승객이 가장 많았습니다. 1등석의 1/3 수준의 생존율을 보이며, 복잡한 선내 구조로 인해 갑판으로 올라가기조차 힘들었습니다.";
+                if (parch === 1 || parch === 2) return "3등석에서도 1~2명의 조력자가 있을 때 생존율이 소폭 상승합니다. 그러나 상위 등급에 비하면 여전히 매우 열악한 수치입니다.";
+                return "3등석에서 대가족 단위로 탈출하는 것은 거의 불가능에 가까웠습니다. 안타깝게도 언어 장벽과 정보 부족으로 인해 가장 큰 피해를 입은 그룹입니다.";
+            }
+        }
+
+        function updateCalculator() {
+            // Get selected values
+            const pclass = parseInt(document.querySelector('input[name="pclass"]:checked').value);
+            const parch = parseInt(document.querySelector('input[name="parch"]:checked').value);
+            
+            // Get survival rate
+            const rate = survivalRates[pclass][parch];
+
+            // 1. Update UI components
+            animateNumber(rate);
+            progressBarEl.style.width = `${rate}%`;
+
+            // 2. Update Color & Status Badge based on threshold
+            let colorClass, bgColorClass, textClass, iconClass, statusTxt;
+            
+            if (rate >= 60) {
+                // High survival
+                colorClass = 'bg-blue-600';
+                bgColorClass = 'bg-blue-100';
+                textClass = 'text-blue-800';
+                iconClass = 'fa-check-circle';
+                statusTxt = '생존 확률 높음';
+            } else if (rate >= 35) {
+                // Medium survival
+                colorClass = 'bg-yellow-500';
+                bgColorClass = 'bg-yellow-100';
+                textClass = 'text-yellow-800';
+                iconClass = 'fa-exclamation-triangle';
+                statusTxt = '생존 불확실';
+            } else {
+                // Low survival
+                colorClass = 'bg-red-500';
+                bgColorClass = 'bg-red-100';
+                textClass = 'text-red-800';
+                iconClass = 'fa-skull-crossbones';
+                statusTxt = '생존 희박 (위험)';
+            }
+
+            // Apply color to progress bar
+            progressBarEl.className = `progress-bar-fill h-full w-0 relative ${colorClass}`;
+            
+            // Apply status badge classes
+            badgeEl.className = `inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold transition-colors duration-300 ${bgColorClass} ${textClass}`;
+            statusIconEl.className = `fa-solid ${iconClass} mr-2`;
+            statusTextEl.textContent = statusTxt;
+
+            // 3. Update Insight Text with fade effect
+            insightTextEl.style.opacity = 0;
+            setTimeout(() => {
+                insightTextEl.textContent = getInsight(pclass, parch, rate);
+                insightTextEl.style.opacity = 1;
+                insightTextEl.style.transition = "opacity 0.5s ease";
+            }, 150);
+        }
+
+        // Add Event Listeners
+        pclassInputs.forEach(input => input.addEventListener('change', updateCalculator));
+        parchInputs.forEach(input => input.addEventListener('change', updateCalculator));
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Small delay to allow CSS transitions to initialize
+            setTimeout(updateCalculator, 100);
+        });
+    </script>
+</body>
+</html>
